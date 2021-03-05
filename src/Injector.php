@@ -1,15 +1,23 @@
-<?php
+<?php declare(strict_types = 1);
 /**
  * @author    Luis Arturo Rodríguez
- * @copyright Copyright (c) 2020 Luis Arturo Rodríguez <rguezque@gmail.com>
+ * @copyright Copyright (c) 2021 Luis Arturo Rodríguez <rguezque@gmail.com>
  * @license   https://opensource.org/licenses/MIT    MIT License
  */
 
 namespace Forge\Injector;
 
+use Closure;
 use Forge\Injector\Container;
 use Forge\Injector\InjectorInterface;
 
+use LogicException;
+use OutOfBoundsException;
+use ReflectionClass;
+
+/**
+ * Contiene e inyecta dependencias.
+ */
 class Injector implements InjectorInterface {
 
     /**
@@ -20,54 +28,51 @@ class Injector implements InjectorInterface {
     private $dependencies = array();
 
     /**
-     * Agrega una dependencia al contenedor
-     * 
-     * @param string $name Nombre o alias de la dependencia
-     * @param string|closure $object Dependencia a guardar
-     * @return object
+     * {@inheritdoc}
      */
     public function add(string $name, $object = null) {
-        if($this->has($name))
-            throw new \Exception(sprintf('Ya existe una dependencia registrada con el nombre (%s)', $name));
+        if($this->has($name)) {
+            throw new LogicException(sprintf('Ya existe una dependencia registrada con el nombre (%s)', $name));
+        }
 
         $object = $object ?? $name;    
             
         $container = new Container($object);
-        $this->dependencies[strtolower($name)] = $container;
+        $this->dependencies[$name] = $container;
 
-        if(!is_object($object) && !is_callable($object))
+        if(!$object instanceof Closure) {
             return $container;
+        }
     }
     
     /**
-     * Recupera una dependencia del contenedor
-     * 
-     * @param string $name Nombre o alias de la dependencia
-     * @return object|closure
-     * @throws \Exception
+     * {@inheritdoc}
      */
     public function get(string $name) {
-        if(!$this->has($name) && !$this->exists($name))
-            throw new \Exception(sprintf('No existe la dependencia solicitada con el nombre (%s)', $name));
+        if(!$this->has($name)) {
+            throw new OutOfBoundsException(sprintf('No existe la dependencia solicitada con el nombre (%s)', $name));
+        }
 
         // Recupera la dependencia
-        $container = $this->dependencies[strtolower($name)];
+        $container = $this->dependencies[$name];
         
-        if(is_object($container->getDependency()) || is_callable($container->getDependency())) {
+        if($container->getDependency() instanceof Closure) {
             $closure = $container->getDependency();
 
             return $closure();
         } else {
-            $ref = new \ReflectionClass($container->getDependency());
+            $ref = new ReflectionClass($container->getDependency());
 
+            // Si la dependencia tiene parámetros, se procesan
             if(!empty($container->getParameters())) {
                 $temp = array();
 
                 foreach ($container->getParameters() as $param) {
-                    if(is_string($param) && $this->exists($param)) {
+                    // Si el parámetro es string y aparece en la lista de dependencias se invoca recursivamente
+                    if(is_string($param) && $this->has($param)) {
                         $ref_param = $this->get($param);
                         $temp[] = $ref_param;
-                    } else {
+                    } else { // Si el parámetro no es una dependencia simplemente se agrega al listado
                         $temp[] = $param;
                     }
                 }
@@ -81,23 +86,10 @@ class Injector implements InjectorInterface {
     }
     
     /**
-     * Verifica si una dependencia esta registrada según su nombre o alias
-     * 
-     * @param string $name Nombre o alias de la dependencia
-     * @return bool
+     * {@inheritdoc}
      */
-    public function has(string $name) {
+    public function has(string $name): bool {
         return array_key_exists($name, $this->dependencies);
-    }
-
-    /**
-     * Verifica si una dependencia existe realmente según su nombre o alias
-     * 
-     * @param string $name Nombre o alias de la dependencia
-     * @param bool
-     */
-    public function exists(string $name) {
-        return class_exists($name);
     }
 
 }

@@ -7,12 +7,15 @@
 
 namespace Forge\Injector;
 
+/**
+ * Contenedor de dependencia.
+ */
 class Container {
 
     /**
      * Definición de la dependencia guardada
      * 
-     * @var string|closure
+     * @var string|Closure
      */
     private $dependency;
 
@@ -26,7 +29,7 @@ class Container {
     /**
      * Constructor
      * 
-     * @param string Recibe la definición de la dependencia
+     * @param string|Closure Recibe la definición de la dependencia
      */
     public function __construct($dependency) {
         $this->dependency = $dependency;
@@ -36,8 +39,9 @@ class Container {
      * Agrega un parámetro a ser inyectado
      * 
      * @param mixed $parameter Parámetro a inyectar
+     * @return Container
      */
-    public function addParameter($parameter) {
+    public function addParameter($parameter): Container {
         $this->arguments[] = $parameter;
 
         return $this;
@@ -47,16 +51,18 @@ class Container {
      * Agrega uno o varios parámetros a ser inyectados
      * 
      * @param array $parameters Parámetros a inyectar
+     * @return Container
      */
-    public function addParameters(array $parameters) {
+    public function addParameters(array $parameters): Container {
         $this->arguments = array_merge($parameters, $this->arguments);
+
+        return $this;
     }
 
     /**
      * Devuelve la definición de la dependencia
      * 
-     * @param void
-     * @return string|closure La dependencia almacenada
+     * @return string|Closure La dependencia almacenada
      */
     public function getDependency() {
         return $this->dependency;
@@ -65,7 +71,6 @@ class Container {
     /**
      * Devuelve los parámetros a ser inyectados a la dependencia
      * 
-     * @param void
      * @return array
      */
     public function getParameters() {
