@@ -9,7 +9,6 @@ namespace Forge\Injector;
 
 use Closure;
 use LogicException;
-use OutOfBoundsException;
 use ReflectionClass;
 
 /**
@@ -47,7 +46,7 @@ class Injector implements InjectorInterface {
      */
     public function get(string $name) {
         if(!$this->has($name)) {
-            throw new OutOfBoundsException(sprintf('No existe la dependencia solicitada con el nombre (%s)', $name));
+            throw new DependencyNotFoundException(sprintf('No existe la dependencia solicitada con el nombre (%s)', $name));
         }
 
         // Recupera la dependencia

@@ -16,7 +16,7 @@ interface InjectorInterface {
      * Agrega una dependencia al contenedor
      * 
      * @param string $name Nombre o alias de la dependencia
-     * @param string|closure $object Dependencia a guardar
+     * @param string|Closure $object Dependencia a guardar
      * @return Dependency|void
      */
     public function add(string $name, $class = null);
@@ -26,7 +26,7 @@ interface InjectorInterface {
      * 
      * @param string $name Nombre o alias de la dependencia
      * @return object|Closure
-     * @throws Exception
+     * @throws DependencyNotFoundException
      */
     public function get(string $name);
 
