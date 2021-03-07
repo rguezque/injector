@@ -8,7 +8,7 @@
 namespace Forge\Injector;
 
 /**
- * Contiene e inyecta dependencias.
+ * Contenedor de dependencias.
  */
 interface InjectorInterface {
 
@@ -17,7 +17,7 @@ interface InjectorInterface {
      * 
      * @param string $name Nombre o alias de la dependencia
      * @param string|closure $object Dependencia a guardar
-     * @return Container|void
+     * @return Dependency|void
      */
     public function add(string $name, $class = null);
 

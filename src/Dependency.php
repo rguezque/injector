@@ -1,16 +1,16 @@
 <?php
 /**
  * @author    Luis Arturo Rodríguez
- * @copyright Copyright (c) 2020 Luis Arturo Rodríguez <rguezque@gmail.com>
+ * @copyright Copyright (c) 2021 Luis Arturo Rodríguez <rguezque@gmail.com>
  * @license   https://opensource.org/licenses/MIT    MIT License
  */
 
 namespace Forge\Injector;
 
 /**
- * Contenedor de dependencia.
+ * Representa una dependencia y sus parámetros.
  */
-class Container {
+class Dependency {
 
     /**
      * Definición de la dependencia guardada

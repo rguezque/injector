@@ -8,22 +8,19 @@
 namespace Forge\Injector;
 
 use Closure;
-use Forge\Injector\Container;
-use Forge\Injector\InjectorInterface;
-
 use LogicException;
 use OutOfBoundsException;
 use ReflectionClass;
 
 /**
- * Contiene e inyecta dependencias.
+ * Contenedor de dependencias.
  */
 class Injector implements InjectorInterface {
 
     /**
      * Almacena los contenedores de dependencias
      * 
-     * @var Container[]
+     * @var Dependency[]
      */
     private $dependencies = array();
 
@@ -37,11 +34,11 @@ class Injector implements InjectorInterface {
 
         $object = $object ?? $name;    
             
-        $container = new Container($object);
-        $this->dependencies[$name] = $container;
+        $dependency = new Dependency($object);
+        $this->dependencies[$name] = $dependency;
 
         if(!$object instanceof Closure) {
-            return $container;
+            return $dependency;
         }
     }
     
@@ -54,20 +51,20 @@ class Injector implements InjectorInterface {
         }
 
         // Recupera la dependencia
-        $container = $this->dependencies[$name];
+        $dependency = $this->dependencies[$name];
         
-        if($container->getDependency() instanceof Closure) {
-            $closure = $container->getDependency();
+        if($dependency->getDependency() instanceof Closure) {
+            $closure = $dependency->getDependency();
 
             return $closure();
         } else {
-            $ref = new ReflectionClass($container->getDependency());
+            $ref = new ReflectionClass($dependency->getDependency());
 
             // Si la dependencia tiene parámetros, se procesan
-            if(!empty($container->getParameters())) {
+            if(!empty($dependency->getParameters())) {
                 $temp = array();
 
-                foreach ($container->getParameters() as $param) {
+                foreach ($dependency->getParameters() as $param) {
                     // Si el parámetro es string y aparece en la lista de dependencias se invoca recursivamente
                     if(is_string($param) && $this->has($param)) {
                         $ref_param = $this->get($param);
