@@ -39,9 +39,9 @@ class Dependency {
      * Agrega un parámetro a ser inyectado
      * 
      * @param mixed $parameter Parámetro a inyectar
-     * @return Container
+     * @return Dependency
      */
-    public function addParameter($parameter): Container {
+    public function addParameter($parameter): Dependency {
         $this->arguments[] = $parameter;
 
         return $this;
@@ -51,9 +51,9 @@ class Dependency {
      * Agrega uno o varios parámetros a ser inyectados
      * 
      * @param array $parameters Parámetros a inyectar
-     * @return Container
+     * @return Dependency
      */
-    public function addParameters(array $parameters): Container {
+    public function addParameters(array $parameters): Dependency {
         $this->arguments = array_merge($parameters, $this->arguments);
 
         return $this;
