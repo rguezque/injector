@@ -5,7 +5,7 @@
  * @license   https://opensource.org/licenses/MIT    MIT License
  */
 
-namespace Forge\Injector;
+namespace rguezque\Injector;
 
 /**
  * Contenedor de dependencias.

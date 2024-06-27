@@ -2,19 +2,21 @@
     "version": "1.0",
     "name": "rguezque/injector",
     "description": "Sencillo contenedor de dependencias.",
-    "homepage": "https://github.com/rguezque",
+    "homepage": "https://github.com/rguezque/injector",
     "license": "MIT",
     "authors": [
         {
             "name": "Luis Rodriguez",
             "email": "rguezque@gmail.com",
-            "role": "Original developer"
+            "role": "Original developer",
+            "homepage": "https://github.com/rguezque"
         }
     ],
     "require": {},
     "autoload": {
         "psr-4": {
-            "Forge\\Injector\\": "src/"
+            "rguezque\\Injector\\": "src/",
+            "rguezque\\Exceptions\\": "src/Exceptions/"
         }
     }
 }

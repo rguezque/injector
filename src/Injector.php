@@ -1,34 +1,47 @@
 <?php declare(strict_types = 1);
 /**
  * @author    Luis Arturo Rodríguez
- * @copyright Copyright (c) 2021 Luis Arturo Rodríguez <rguezque@gmail.com>
+ * @copyright Copyright (c) 2022-2024 Luis Arturo Rodríguez <rguezque@gmail.com>
+ * @link      https://github.com/rguezque
  * @license   https://opensource.org/licenses/MIT    MIT License
  */
 
-namespace Forge\Injector;
+namespace rguezque\Injector;
 
 use Closure;
-use LogicException;
 use ReflectionClass;
+use ReflectionMethod;
+use rguezque\Exceptions\ClassNotFoundException;
+use rguezque\Exceptions\DependencyNotFoundException;
+use rguezque\Exceptions\DuplicityException;
 
 /**
- * Contenedor de dependencias.
+ * Dependencies container.
+ * 
+ * @method void|Dependency add(string $name, callable $object = null) Add a dependency to container
+ * @method object|Closure get(string $name) Retrieves a dependency
+ * @method bool has(string $name) Returns true if a dependency exists
  */
-class Injector implements InjectorInterface {
+class Injector {
 
     /**
-     * Almacena los contenedores de dependencias
+     * Dependencies collection
      * 
      * @var Dependency[]
      */
-    private $dependencies = array();
+    private $dependencies = [];
 
     /**
-     * {@inheritdoc}
+     * Add a dependency to container
+     * 
+     * @param string $name Dependendy name
+     * @param callable $object Dependency
+     * @return Dependency|void
+     * @throws DuplicityException
      */
-    public function add(string $name, $object = null) {
+    public function add(string $name, callable $object = null) {
         if($this->has($name)) {
-            throw new LogicException(sprintf('Ya existe una dependencia registrada con el nombre (%s)', $name));
+            throw new DuplicityException(sprintf('Already exists a dependency with name "%s".', $name));
         }
 
         $object = $object ?? $name;    
@@ -36,53 +49,78 @@ class Injector implements InjectorInterface {
         $dependency = new Dependency($object);
         $this->dependencies[$name] = $dependency;
 
-        if(!$object instanceof Closure) {
+        if(!$object instanceof Closure || !is_array($object)) {
             return $dependency;
         }
     }
     
     /**
-     * {@inheritdoc}
+     * Retrieves a dependency
+     * 
+     * @param string $name Dependency name
+     * @return object|Closure
+     * @throws DependencyNotFoundException
+     * @throws ClassNotFoundException
      */
-    public function get(string $name) {
+    public function get(string $name, array $arguments = []) {
         if(!$this->has($name)) {
-            throw new DependencyNotFoundException(sprintf('No existe la dependencia solicitada con el nombre (%s)', $name));
+            throw new DependencyNotFoundException(sprintf('Don\'t exists a dependency with name "%s".', $name));
         }
 
-        // Recupera la dependencia
-        $dependency = $this->dependencies[$name];
+        // Retrieve the dependency
+        $dependency_object = $this->dependencies[$name];
+        $dependency = $dependency_object->getDependency();
         
-        if($dependency->getDependency() instanceof Closure) {
-            $closure = $dependency->getDependency();
+        if($dependency instanceof Closure) {
+            return [] !== $arguments ? call_user_func_array($dependency, array_values($arguments)) : call_user_func($dependency);
+        } else if(is_array($dependency)) {
+            list($class, $method) = $dependency;
 
-            return $closure();
+            if(!class_exists($class)) {
+                throw new ClassNotFoundException(sprintf('Don\'t exists the class "%s".', $class));
+            }
+
+            $rm = new ReflectionMethod($class, $method);
+
+            if(!$rm->isStatic()) {
+                $rc = new ReflectionClass($class);
+                $class = $rc->newInstance();
+                $dependency = [$class, $method];
+            }
+
+            return [] !== $arguments ? call_user_func_array($dependency, array_values($arguments)) : call_user_func($dependency);
         } else {
-            $ref = new ReflectionClass($dependency->getDependency());
+            if(!class_exists($dependency)) {
+                throw new ClassNotFoundException(sprintf('Don\'t exists the class "%s".', $dependency));
+            }
 
-            // Si la dependencia tiene parámetros, se procesan
-            if(!empty($dependency->getParameters())) {
-                $temp = array();
+            $class = new ReflectionClass($dependency);
 
-                foreach ($dependency->getParameters() as $param) {
-                    // Si el parámetro es string y aparece en la lista de dependencias se invoca recursivamente
+            // If has parameters...
+            $parameters = $dependency_object->getParameters();
+            if([] !== $parameters) {
+                foreach ($parameters as &$param) {
+                    // If parameter exists in the container as dependency, retrieve recursively
                     if(is_string($param) && $this->has($param)) {
-                        $ref_param = $this->get($param);
-                        $temp[] = $ref_param;
-                    } else { // Si el parámetro no es una dependencia simplemente se agrega al listado
-                        $temp[] = $param;
+                        $param = $this->get($param);
                     }
                 }
-
-                return $ref->newInstanceArgs($temp);
-            } else {
                 
-                return $ref->newInstance();
+                if([] !== $arguments) {
+                    $parameters = array_merge($parameters, $arguments);
+                }
+                return $class->newInstanceArgs($parameters);
+            } else {
+                return [] !== $arguments ? $class->newInstanceArgs($arguments) : $class->newInstance();
             }
         }
     }
     
     /**
-     * {@inheritdoc}
+     * Returns true if a dependency exists
+     * 
+     * @param string $name Dependency name
+     * @return bool
      */
     public function has(string $name): bool {
         return array_key_exists($name, $this->dependencies);
