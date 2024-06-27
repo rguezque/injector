@@ -31,8 +31,8 @@ $injector->add('my_function', function() {
 
 Solo se permite agregar parámetros cuando la dependencia es una clase. Si alguno de los parámetros es a su vez una clase, recursivamente se crerá la instancia de esta y será inyectada al constructor de la dependencia. En el caso de funciones anónimas y métodos estáticos, los parámetros son enviados al momento de recuperar las dependencias (Ver [Recuperar dependencias](#recuperar-dependencias)).
 
-[!IMPORTANT]
-Cabe mencionar que toda clase que sea definida como parámetro de otra clase debe estar agregada también al contenedor como una dependencia.
+>[!IMPORTANT]
+>Cabe mencionar que toda clase que sea definida como parámetro de otra clase debe estar agregada también al contenedor como una dependencia.
 
 ```php
 use rguezque\Injector\Injector;
@@ -76,5 +76,5 @@ $suma = $injector->get('suma', [23, 76]);
 $injector->get('goo);
 ```
 
-[!NOTE]
-Para saber si una dependencia existe usa el método `Injector::has`, el cual recibe como argumento el nombre de la dependencia buscada. Devolverá `true` si existe o  `false` en caso contrario.
+>[!NOTE]
+>Para saber si una dependencia existe usa el método `Injector::has`, el cual recibe como argumento el nombre de la dependencia buscada. Devolverá `true` si existe o  `false` en caso contrario.
