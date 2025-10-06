@@ -27,12 +27,14 @@ $injector->add('my_function', function() {
 });
 ```
 
-## Agregar parámetros
+## Agregar argumentos
 
-Solo se permite agregar parámetros cuando la dependencia es una clase. Si alguno de los parámetros es a su vez una clase, recursivamente se crerá la instancia de esta y será inyectada al constructor de la dependencia. En el caso de funciones anónimas y métodos estáticos, los parámetros son enviados al momento de recuperar las dependencias (Ver [Recuperar dependencias](#recuperar-dependencias)).
+Para definir argumentos a ser inyectados utiliza `Injector::addArgument` o `Injector::addArguments`; el primero recibe un solo argumento y el segundo recibe un `array` con el listado de argumentos a inyectar.
+
+Si alguno de los argumentos es a su vez una clase, recursivamente se creará la instancia de esta y será inyectada al constructor de la dependencia. En el caso de funciones anónimas y métodos estáticos, los argumentos son enviados al momento de recuperar las dependencias (Ver [Recuperar dependencias](#recuperar-dependencias)).
 
 >[!IMPORTANT]
->Cabe mencionar que toda clase que sea definida como parámetro de otra clase debe estar agregada también al contenedor como una dependencia.
+>Cabe mencionar que toda clase que sea definida como argumento de otra clase debe estar agregada también al contenedor como una dependencia.
 
 ```php
 use rguezque\Injector\Injector;
@@ -40,30 +42,29 @@ use PDO;
 
 $injector = new Injector;
 
-// Se definen varios parámetros en un array
-$injector->add(PDO::class)->addParameters([/*...*/]);
+// Se definen varios argumentos en un array
+$injector->add(PDO::class)->addArguments(['mysql:host=localhost;port=3306;dbname=test;charset=utf8', 'fake_usr', 'fake_pwd']);
 
-// Se agregaun solo parámetro
-$injector->add(Users::class)->addParameter(PDO::class);
+// Se agrega un solo argumento
+$injector->add(Users::class)->addArgument(PDO::class);
 
 ```
 
-En el ejemplo anterior la clase `User` requiere la inyección de una instancia de `PDO`, a su vez la clase `PDO` se agrego al contenedor de dependencias. No importa el orden de definición entre `User` y `PDO` pues solo se ejecuta la inyección de dependencias al llamar alguna.
+En el ejemplo anterior la clase `User` requiere la inyección de una instancia de `PDO`, a su vez la clase `PDO` se agregó al contenedor de dependencias con sus argumentos definidos. No importa el orden de definición entre `User` y `PDO` pues solo se ejecuta la inyección de dependencias al llamar alguna.
 
 ## Recuperar dependencias
 
-Las dependencias se recuperan con el método `Injector::get`, el cual recibe el nombre de la dependencia requerida. En caso de no existir en el contenedor arrojará una excepción `DependencyNotFoundException`. Las dependencias definidas como una clase solo retornarán la instancia de dicha clase con sus respectivas dependencias inyectadas de haber sido definidas así (Ver [Agregar parámetros](#agregar-parámetros)).
+Las dependencias se recuperan con el método `Injector::get`, el cual recibe el nombre de la dependencia requerida. En caso de no existir en el contenedor arrojará una excepción `DependencyNotFoundException`. Las dependencias definidas como una clase solo retornarán la instancia de dicha clase con sus respectivas dependencias inyectadas de haber sido definidas así (Ver [Agregar argumentos](#agregar-argumentos)).
 
-Las dependencias definidas como funciones anónimas o métodos estáticos devolverán directamente el resultado o acción que se haya definido. Adicionalmente se pueden enviar parámetros al momento de recuperar las dependencias de este tipo.
+Las dependencias definidas como funciones anónimas o métodos estáticos devolverán directamente el resultado o acción que se haya definido. Adicionalmente se pueden enviar argumentos al momento de recuperar las dependencias.
 
 ```php
 use rguezque\Injector\Injector;
 
 $injector = new Injector;
 $injector->add('foo', Foo::class);
-$injector->add('suma', function(int $a, int $b) {
-    return $a + $b;
-});
+$injector->add('suma', fn(int $a, int $b) => $a + $b;);
+$injector->add('mult', fn(int $a, int $b) => $a * $b;)->addArguments([15, 3]);
 $injector->add('goo', [Goo::class, 'myAction']);
 
 // Devuelve la instancia de la clase
@@ -72,8 +73,11 @@ $foo = $injector->get(Foo::class);
 // Devuelve un resultado de una función
 $suma = $injector->get('suma', [23, 76]);
 
+// Devolverá: 45
+$suma = $injector->get('mult');
+
 // Tambien devuelve un resultado o una acción pero de un método estático
-$injector->get('goo);
+$injector->get('goo');
 ```
 
 >[!NOTE]

@@ -24,13 +24,11 @@ class Container {
      * Allow call statically the methods of Injector
      * 
      * @param string $name Method name
-     * @param array 4params Method parameters
+     * @param array $params Method parameters
      * @return mixed
      */
     public static function __callStatic(string $name, array $params) {
-        $app = self::app();
-
-        return call_user_func_array([$app, $name], array_values($params));
+        return self::app()->$name(...$params);
     }
 
     /**
@@ -39,12 +37,8 @@ class Container {
      * @return Injector
      */
     public static function app(): Injector {
-        static $initialized = false;
-
-        if (!$initialized) {
+        if (!isset(self::$injector)) {
             self::$injector = new Injector();
-
-            $initialized = true;
         }
 
         return self::$injector;

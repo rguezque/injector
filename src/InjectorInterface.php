@@ -2,6 +2,7 @@
 /**
  * @author    Luis Arturo Rodríguez
  * @copyright Copyright (c) 2021 Luis Arturo Rodríguez <rguezque@gmail.com>
+ * @link      https://github.com/rguezque
  * @license   https://opensource.org/licenses/MIT    MIT License
  */
 
@@ -13,27 +14,29 @@ namespace rguezque\Injector;
 interface InjectorInterface {
 
     /**
-     * Agrega una dependencia al contenedor
+     * Add a dependency to container
      * 
-     * @param string $name Nombre o alias de la dependencia
-     * @param string|Closure $object Dependencia a guardar
-     * @return Dependency|void
+     * @param string $name Dependendy name
+     * @param callable|null $object Dependency
+     * @return Dependency
+     * @throws DuplicityException
      */
-    public function add(string $name, $class = null);
+    public function add(string $name, $class = null): Dependency;
 
     /**
-     * Recupera una dependencia del contenedor
+     * Retrieves a dependency
      * 
-     * @param string $name Nombre o alias de la dependencia
-     * @return object|Closure
+     * @param string $name Dependency name
+     * @return mixed
      * @throws DependencyNotFoundException
+     * @throws ClassNotFoundException
      */
-    public function get(string $name);
+    public function get(string $name): mixed;
 
     /**
-     * Verifica si una dependencia esta registrada según su nombre o alias
+     * Returns true if a dependency exists
      * 
-     * @param string $name Nombre o alias de la dependencia
+     * @param string $name Dependency name
      * @return bool
      */
     public function has(string $name): bool;

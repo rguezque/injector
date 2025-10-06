@@ -27,7 +27,7 @@ class Injector {
     /**
      * Dependencies collection
      * 
-     * @var Dependency[]
+     * @var array<string, Dependency>
      */
     private $dependencies = [];
 
@@ -35,34 +35,31 @@ class Injector {
      * Add a dependency to container
      * 
      * @param string $name Dependendy name
-     * @param callable $object Dependency
-     * @return Dependency|void
+     * @param callable|null $object Dependency
+     * @return Dependency
      * @throws DuplicityException
      */
-    public function add(string $name, callable $object = null) {
+    public function add(string $name, ?callable $object = null): Dependency {
         if($this->has($name)) {
             throw new DuplicityException(sprintf('Already exists a dependency with name "%s".', $name));
         }
 
         $object = $object ?? $name;    
-            
         $dependency = new Dependency($object);
         $this->dependencies[$name] = $dependency;
 
-        if(!$object instanceof Closure || !is_array($object)) {
-            return $dependency;
-        }
+        return $dependency;
     }
     
     /**
      * Retrieves a dependency
      * 
      * @param string $name Dependency name
-     * @return object|Closure
+     * @return mixed
      * @throws DependencyNotFoundException
      * @throws ClassNotFoundException
      */
-    public function get(string $name, array $arguments = []) {
+    public function get(string $name, array $arguments = []): mixed {
         if(!$this->has($name)) {
             throw new DependencyNotFoundException(sprintf('Don\'t exists a dependency with name "%s".', $name));
         }
@@ -70,10 +67,13 @@ class Injector {
         // Retrieve the dependency
         $dependency_object = $this->dependencies[$name];
         $dependency = $dependency_object->getDependency();
+        $dependency_args = $dependency_object->getArguments();
         
         if($dependency instanceof Closure) {
-            return [] !== $arguments ? call_user_func_array($dependency, array_values($arguments)) : call_user_func($dependency);
-        } else if(is_array($dependency)) {
+            return $this->execDependency($dependency, $dependency_args, $arguments);
+        } 
+        
+        if(is_array($dependency)) {
             list($class, $method) = $dependency;
 
             if(!class_exists($class)) {
@@ -88,32 +88,30 @@ class Injector {
                 $dependency = [$class, $method];
             }
 
-            return [] !== $arguments ? call_user_func_array($dependency, array_values($arguments)) : call_user_func($dependency);
-        } else {
-            if(!class_exists($dependency)) {
-                throw new ClassNotFoundException(sprintf('Don\'t exists the class "%s".', $dependency));
-            }
-
-            $class = new ReflectionClass($dependency);
-
-            // If has parameters...
-            $parameters = $dependency_object->getParameters();
-            if([] !== $parameters) {
-                foreach ($parameters as &$param) {
-                    // If parameter exists in the container as dependency, retrieve recursively
-                    if(is_string($param) && $this->has($param)) {
-                        $param = $this->get($param);
-                    }
-                }
-                
-                if([] !== $arguments) {
-                    $parameters = array_merge($parameters, $arguments);
-                }
-                return $class->newInstanceArgs($parameters);
-            } else {
-                return [] !== $arguments ? $class->newInstanceArgs($arguments) : $class->newInstance();
-            }
+            return $this->execDependency($dependency, $dependency_args, $arguments);
         }
+
+        if(!class_exists($dependency)) {
+            throw new ClassNotFoundException(sprintf('Don\'t exists the class "%s".', $dependency));
+        }
+
+        $class = new ReflectionClass($dependency);
+
+        if([] !== $dependency_args) {
+            $mapped_parameters = array_map(function($arg) {
+                if(is_string($arg) && $this->has($arg)) {
+                    $arg = $this->get($arg);
+                }
+                return $arg;
+            }, $dependency_args);
+            
+            if([] !== $arguments) {
+                $mapped_parameters = array_merge($mapped_parameters, $arguments);
+            }
+            return $class->newInstanceArgs($mapped_parameters);
+        } 
+        
+        return [] !== $arguments ? $class->newInstanceArgs($arguments) : $class->newInstance();
     }
     
     /**
@@ -124,6 +122,18 @@ class Injector {
      */
     public function has(string $name): bool {
         return array_key_exists($name, $this->dependencies);
+    }
+
+    /**
+     * Returns the result of executing a dependency of Closure type or static method
+     * 
+     * @param mixed $dependency The dependency to execute
+     * @param array $parameters Arguments injected to dependency
+     * @param array $arguments Arguments sent when dependency is called
+     * @return mixed
+     */
+    private function execDependency($dependency, array $parameters, array $arguments): mixed {
+        return [] !== $arguments ? call_user_func_array($dependency, array_values(array_merge($parameters, $arguments))) : call_user_func($dependency, ...$parameters);
     }
 
 }

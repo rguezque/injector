@@ -1,80 +1,96 @@
-<?php
+<?php declare(strict_types = 1);
 /**
  * @author    Luis Arturo Rodríguez
  * @copyright Copyright (c) 2021 Luis Arturo Rodríguez <rguezque@gmail.com>
+ * @link      https://github.com/rguezque
  * @license   https://opensource.org/licenses/MIT    MIT License
  */
 
 namespace rguezque\Injector;
 
+use Closure;
+
 /**
- * Representa una dependencia y sus parámetros.
+ * Represents a dependency and its arguments
  */
 class Dependency {
 
-    /**
-     * Definición de la dependencia guardada
-     * 
-     * @var string|Closure
-     */
-    private $dependency;
+    /** Dependency definition */
+    private string|array|Closure|null $dependency = null;
+
+    /** Dependency name */
+    private ?string $name = null;
+
+    /** Arguments for dependency */
+    private array $arguments = array();
 
     /**
-     * Parámetros enviados a la dependencia
+     * Dependency definition
      * 
-     * @var array
-     */
-    private $arguments = array();
-
-    /**
-     * Constructor
-     * 
-     * @param string|Closure Recibe la definición de la dependencia
+     * @param string|Closure Dependency to store
      */
     public function __construct($dependency) {
         $this->dependency = $dependency;
     }
 
     /**
-     * Agrega un parámetro a ser inyectado
+     * Add an argument
      * 
-     * @param mixed $parameter Parámetro a inyectar
+     * @param mixed $argument Argument to inject
      * @return Dependency
      */
-    public function addParameter($parameter): Dependency {
-        $this->arguments[] = $parameter;
+    public function addArgument(mixed $argument): Dependency {
+        $this->arguments[] = $argument;
 
         return $this;
     }
 
     /**
-     * Agrega uno o varios parámetros a ser inyectados
+     * Add one or more arguments
      * 
-     * @param array $parameters Parámetros a inyectar
+     * @param array $arguments Arguments to inject
      * @return Dependency
      */
-    public function addParameters(array $parameters): Dependency {
-        $this->arguments = array_merge($parameters, $this->arguments);
+    public function addArguments(array $arguments): Dependency {
+        $this->arguments = array_merge($arguments, $this->arguments);
 
         return $this;
     }
 
     /**
-     * Devuelve la definición de la dependencia
+     * Retrieve the dependency
      * 
-     * @return string|Closure La dependencia almacenada
+     * @return string|array|Closure Dependency stored
      */
     public function getDependency() {
         return $this->dependency;
     }
 
     /**
-     * Devuelve los parámetros a ser inyectados a la dependencia
+     * Retrieve the dependency arguments
      * 
      * @return array
      */
-    public function getParameters() {
-        return $this->arguments;
+    public function getArguments(): array {
+        return array_values($this->arguments);
+    }
+
+    /**
+     * Set dependency name
+     * 
+     * @param string $name Dependency name
+     */
+    public function setName(string $name): void {
+        $this->name = trim($name);
+    }
+
+    /**
+     * Retrieve dependency name
+     * 
+     * @return string Dependency name
+     */
+    public function getName(): string {
+        return $this->name;
     }
 
 }
