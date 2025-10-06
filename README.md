@@ -82,6 +82,3 @@ $injector->get('goo');
 
 >[!NOTE]
 >Para saber si una dependencia existe usa el método `Injector::has`, el cual recibe como argumento el nombre de la dependencia buscada. Devolverá `true` si existe o  `false` en caso contrario.
-
->[!TIP]
->También se puede llamar a los métodos del contenedor de forma estática a través del _facade_ `Container`. Ejem.: `Container::add('foo', Foo::class)`.
