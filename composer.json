@@ -1,7 +1,7 @@
 {
     "version": "1.0",
     "name": "rguezque/injector",
-    "description": "Sencillo contenedor de dependencias.",
+    "description": "Sencillo y ligero contenedor de dependencias.",
     "homepage": "https://github.com/rguezque/injector",
     "license": "MIT",
     "authors": [

@@ -24,12 +24,18 @@ class Dependency {
     /** Arguments for dependency */
     private array $arguments = array();
 
+    /** Define a dependency as Singleton */
+    private bool $shared = false;
+
+    /** Represents the resolved instance from the dependency */
+    private mixed $resolved_instance = null;
+
     /**
      * Dependency definition
      * 
-     * @param string|Closure Dependency to store
+     * @param string|array|Closure Dependency to store
      */
-    public function __construct($dependency) {
+    public function __construct(string|array|Closure $dependency) {
         $this->dependency = $dependency;
     }
 
@@ -52,7 +58,7 @@ class Dependency {
      * @return Dependency
      */
     public function addArguments(array $arguments): Dependency {
-        $this->arguments = array_merge($arguments, $this->arguments);
+        $this->arguments = array_merge($this->arguments, $arguments);
 
         return $this;
     }
@@ -62,7 +68,7 @@ class Dependency {
      * 
      * @return string|array|Closure Dependency stored
      */
-    public function getDependency() {
+    public function getDependency(): string|array|Closure|null {
         return $this->dependency;
     }
 
@@ -79,9 +85,11 @@ class Dependency {
      * Set dependency name
      * 
      * @param string $name Dependency name
+     * @return Dependency
      */
-    public function setName(string $name): void {
+    public function setName(string $name): Dependency {
         $this->name = trim($name);
+        return $this;
     }
 
     /**
@@ -93,6 +101,53 @@ class Dependency {
         return $this->name;
     }
 
+    /**
+     * Set the dependency as Singleton behaviour
+     * 
+     * @param bool $shared By default is `true`
+     * @return Dependency
+     */
+    public function setShared(bool $shared = true): Dependency {
+        $this->shared = $shared;
+        return $this;
+    }
+
+    /**
+     * Returns `true` if dependency is set as Singleton, otherwise `false`
+     * 
+     * @return bool
+     */
+    public function isShared(): bool {
+        return $this->shared;
+    }
+
+    /**
+     * Set the resolved dependency
+     * 
+     * @param mixed $instance The dependency already resolved
+     * @return void
+     */
+    public function setResolvedInstance(mixed $instance): void {
+        $this->resolved_instance = $instance;
+    }
+
+    /**
+     * Returns the resolved dependency
+     * 
+     * @return mixed
+     */
+    public function getResolvedInstance(): mixed {
+        return $this->resolved_instance;
+    }
+
+    /**
+     * Returns `true` if dependency is already resolved, otherwise `false`
+     * 
+     * @return bool
+     */
+    public function hasResolvedInstance(): bool {
+        return $this->resolved_instance !== null;
+    }
 }
 
 ?>

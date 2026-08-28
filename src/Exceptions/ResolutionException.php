@@ -11,9 +11,9 @@ namespace rguezque\Exceptions;
 use Exception;
 
 /**
- * Throws an exception when exists a duplicate symbol declaration
+ * Throws a exception when a dependency can't be resolved
  */
-class DuplicityException extends Exception {
+class ResolutionException extends Exception {
 
 }
 
